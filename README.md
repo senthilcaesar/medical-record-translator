@@ -2,6 +2,8 @@
 
 A web application that helps patients understand their medical records by translating complex medical terminology into plain English using AI.
 
+![Alt text](images/lab_result_dash.png)
+
 ## Features
 
 - **PDF Upload**: Upload lab results and prescriptions in PDF format
