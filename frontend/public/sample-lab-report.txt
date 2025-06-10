@@ -1,0 +1,34 @@
+COMPREHENSIVE METABOLIC PANEL & COMPLETE BLOOD COUNT
+
+Patient: John Doe
+Date: 2024-01-15
+Lab ID: 12345
+
+COMPLETE BLOOD COUNT (CBC)
+Hemoglobin: 14.0 g/dL (Normal: 13.5-18.0)
+RBC Count: 6.52 million cells/cmm (Normal: 3.5-5.0)
+Hematocrit (HCT): 56.3% (Normal: 40-65%)
+MCV: 86.5 fL (Normal: 76-96)
+MCH: 24.5 pg (Normal: 27-32)
+MCHC: 28.4 g% (Normal: 30-35)
+WBC Count: 8,200 cells/cmm (Normal: 4,500-11,000)
+Neutrophils: 65% (Normal: 50-70%)
+Lymphocytes: 30% (Normal: 20-40%)
+Monocytes: 4% (Normal: 2-8%)
+Eosinophils: 0% (Normal: 1-4%)
+Basophils: 1% (Normal: 0-2%)
+Platelet Count: 188,000/cmm (Normal: 150,000-450,000)
+
+BIOCHEMISTRY
+Blood Sugar (Fasting): 110 mg/dL (Normal: 70-110)
+Urea: 24 mg/dL (Normal: 10-40)
+Creatinine: 0.7 mg/dL (Normal: 0.9-1.4)
+Uric Acid: 5.4 mg/dL (Normal: 3.5-7.2)
+
+LIPID PROFILE
+Total Cholesterol: 180 mg/dL (Normal: <200)
+Triglycerides: 152 mg/dL (Normal: <150)
+HDL Cholesterol: 45 mg/dL (Normal: 45-60)
+LDL Cholesterol: 104.6 mg/dL (Normal: 70-165)
+VLDL: 30.4 mg/dL (Normal: 15-30)
+Total Cholesterol/HDL Ratio: 4.0 (Normal: <4.5)

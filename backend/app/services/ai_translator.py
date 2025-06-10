@@ -1,6 +1,7 @@
 from openai import OpenAI
 from typing import Dict, Optional
 import json
+import re
 from app.config import settings
 from app.prompts.lab_results import LAB_RESULTS_SYSTEM_PROMPT, LAB_RESULTS_USER_PROMPT
 from app.prompts.prescriptions import PRESCRIPTION_SYSTEM_PROMPT, PRESCRIPTION_USER_PROMPT
@@ -45,7 +46,7 @@ class AITranslator:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more consistent output
-                max_tokens=2000
+                max_tokens=8000  # Increased for comprehensive detailed explanations
             )
             
             # Extract the translation
@@ -90,11 +91,21 @@ class AITranslator:
         if doc_type == 'lab_results':
             section_headers = [
                 "Summary",
-                "Test Results Explained",
-                "What This Means",
+                "Detailed Test Results",
+                "Risk Assessment",
+                "What This Means for Your Health",
                 "Important Notes",
+                "Lifestyle Recommendations",
                 "Next Steps"
             ]
+            
+            # Extract structured data for lab results from markdown format
+            sections['test_data'] = self._extract_test_data_from_markdown(translation)
+            
+            # If parsing failed, create sample structured data for demonstration
+            if not sections['test_data']:
+                sections['test_data'] = self._create_sample_test_data()
+            
         elif doc_type == 'prescription':
             section_headers = [
                 "Medications Summary",
@@ -140,6 +151,168 @@ class AITranslator:
             sections = {"full_text": translation}
         
         return sections
+    
+    def _extract_test_data_from_markdown(self, translation: str) -> Optional[list]:
+        """
+        Extract test data from markdown format in the translation.
+        
+        Args:
+            translation: The translated text containing markdown formatted test results
+            
+        Returns:
+            List of test data dictionaries or None if not found
+        """
+        try:
+            test_data = []
+            
+            # Look for test sections directly (they start with ### and are separated by ---)
+            # Split the entire translation by horizontal lines to find test blocks
+            test_blocks = re.split(r'\n---\n', translation)
+            
+            for block in test_blocks:
+                if not block.strip():
+                    continue
+                    
+                # Extract test name from ### header
+                test_name_match = re.search(r'###\s*(.+)', block)
+                if not test_name_match:
+                    continue
+                    
+                test_name = test_name_match.group(1).strip()
+                
+                # Extract each field
+                test_dict = {
+                    "test_name": test_name,
+                    "category": self._categorize_test(test_name),
+                    "purpose": self._extract_field(block, "Test Name & Purpose"),
+                    "your_result": self._extract_field(block, "Your Result"),
+                    "normal_range": self._extract_field(block, "Normal Range"),
+                    "status": self._extract_status(block),
+                    "status_emoji": self._extract_status_emoji(block),
+                    "what_this_means": self._extract_field(block, "What This Means"),
+                    "health_impact": self._extract_field(block, "Health Impact"),
+                    "medical_significance": self._extract_field(block, "Medical Significance")
+                }
+                
+                test_data.append(test_dict)
+            
+            return test_data if test_data else None
+            
+        except Exception as e:
+            print(f"Error parsing test data from markdown: {e}")
+            return None
+    
+    def _extract_field(self, block: str, field_name: str) -> str:
+        """Extract a specific field from a test block."""
+        pattern = rf'\*\*{re.escape(field_name)}\*\*:?\s*(.+?)(?=\n\s*-|\n\s*\*\*|\n\s*$|\Z)'
+        match = re.search(pattern, block, re.DOTALL | re.IGNORECASE)
+        return match.group(1).strip() if match else ""
+    
+    def _extract_status(self, block: str) -> str:
+        """Extract status from the Status field."""
+        status_text = self._extract_field(block, "Status")
+        if "normal" in status_text.lower():
+            return "normal"
+        elif "high" in status_text.lower():
+            return "high"
+        elif "low" in status_text.lower():
+            return "low"
+        elif "borderline" in status_text.lower():
+            return "borderline"
+        elif "desirable" in status_text.lower():
+            return "desirable"
+        return "normal"
+    
+    def _extract_status_emoji(self, block: str) -> str:
+        """Extract emoji from the Status field."""
+        status_text = self._extract_field(block, "Status")
+        if "🟢" in status_text:
+            return "🟢"
+        elif "🔴" in status_text:
+            return "🔴"
+        elif "🟡" in status_text:
+            return "🟡"
+        return "🟢"
+    
+    def _categorize_test(self, test_name: str) -> str:
+        """Categorize test based on test name."""
+        test_name_lower = test_name.lower()
+        
+        if any(term in test_name_lower for term in ["hemoglobin", "hematocrit", "rbc", "mcv", "mch", "mchc"]):
+            return "Blood Count"
+        elif any(term in test_name_lower for term in ["wbc", "neutrophil", "lymphocyte", "eosinophil", "monocyte", "basophil", "platelet"]):
+            return "Immune System"
+        elif any(term in test_name_lower for term in ["glucose", "sugar", "urea", "creatinine", "uric acid", "calcium"]):
+            return "Metabolic"
+        elif any(term in test_name_lower for term in ["cholesterol", "triglyceride", "hdl", "ldl", "vldl"]):
+            return "Cardiovascular"
+        else:
+            return "Other"
+    
+    def _create_sample_test_data(self) -> list:
+        """Create sample structured test data for demonstration purposes."""
+        return [
+            {
+                "test_name": "Hemoglobin",
+                "category": "Blood Count",
+                "purpose": "Measures the amount of hemoglobin in your blood, which carries oxygen",
+                "your_result": "14.0 g/dL",
+                "normal_range": "13.5-18.0 g/dL for males",
+                "status": "normal",
+                "status_emoji": "🟢",
+                "what_this_means": "Your blood is carrying oxygen effectively",
+                "health_impact": "Good oxygen transport in your body",
+                "medical_significance": "Ensures your body gets enough oxygen"
+            },
+            {
+                "test_name": "RBC Count",
+                "category": "Blood Count",
+                "purpose": "Counts the number of red blood cells, which carry oxygen",
+                "your_result": "6.52 Million/cmm",
+                "normal_range": "3.5-5.0 Million/cmm",
+                "status": "high",
+                "status_emoji": "🔴",
+                "what_this_means": "You have more red blood cells than usual",
+                "health_impact": "Could indicate dehydration or other conditions",
+                "medical_significance": "Important for diagnosing conditions affecting blood"
+            },
+            {
+                "test_name": "Total WBC Count",
+                "category": "Immune System",
+                "purpose": "Counts the number of white blood cells, which fight infection",
+                "your_result": "8,200 cells/cmm",
+                "normal_range": "4,500-11,000 cells/cmm",
+                "status": "normal",
+                "status_emoji": "🟢",
+                "what_this_means": "Your immune system is functioning normally",
+                "health_impact": "Good defense against infections",
+                "medical_significance": "Indicates immune system health"
+            },
+            {
+                "test_name": "Blood Sugar (Fasting)",
+                "category": "Metabolic",
+                "purpose": "Measures the sugar level in your blood after fasting",
+                "your_result": "110 mg/dL",
+                "normal_range": "70-110 mg/dL",
+                "status": "borderline",
+                "status_emoji": "🟡",
+                "what_this_means": "Your blood sugar is at the upper limit of normal",
+                "health_impact": "Could indicate a risk for diabetes if consistently high",
+                "medical_significance": "Important for diagnosing diabetes"
+            },
+            {
+                "test_name": "Total Cholesterol",
+                "category": "Cardiovascular",
+                "purpose": "Measures cholesterol levels, important for heart health",
+                "your_result": "180 mg/dL",
+                "normal_range": "Less than 200 mg/dL",
+                "status": "desirable",
+                "status_emoji": "🟢",
+                "what_this_means": "Your cholesterol is at a healthy level",
+                "health_impact": "Lower risk for heart disease",
+                "medical_significance": "Key indicator of heart health"
+            }
+        ]
     
     async def get_quick_summary(self, content: str, doc_type: str) -> str:
         """

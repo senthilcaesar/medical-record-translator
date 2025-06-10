@@ -1,6 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { FiFileText, FiDownload, FiRefreshCw } from "react-icons/fi";
+import TestResultsTable from "./TestResultsTable";
 
 const TranslationResults = ({ result, onNewTranslation }) => {
   const { document_type, sections, translation } = result.result;
@@ -79,49 +80,84 @@ const TranslationResults = ({ result, onNewTranslation }) => {
         </div>
       </div>
 
-      <div className="card">
-        {document_type === "lab_results" && sections && (
-          <>
+      {/* Lab Results with Interactive Table */}
+      {document_type === "lab_results" && sections && sections.test_data && (
+        <div className="space-y-8">
+          {/* Interactive Test Results Table */}
+          <TestResultsTable testData={sections.test_data} />
+
+          {/* Additional Sections */}
+          <div className="card">
             {renderSection("Summary", sections.summary)}
+            {renderSection("Risk Assessment", sections.risk_assessment)}
             {renderSection(
-              "Test Results Explained",
-              sections.test_results_explained
+              "What This Means for Your Health",
+              sections.what_this_means_for_your_health
             )}
-            {renderSection("What This Means", sections.what_this_means)}
             {renderSection("Important Notes", sections.important_notes)}
+            {renderSection(
+              "Lifestyle Recommendations",
+              sections.lifestyle_recommendations
+            )}
             {renderSection("Next Steps", sections.next_steps)}
-          </>
-        )}
+          </div>
+        </div>
+      )}
 
-        {document_type === "prescription" && sections && (
-          <>
-            {renderSection("Medications Summary", sections.medications_summary)}
-            {renderSection(
-              "What Each Medicine Does",
-              sections.what_each_medicine_does
-            )}
-            {renderSection(
-              "How to Take Your Medicine",
-              sections.how_to_take_your_medicine
-            )}
-            {renderSection(
-              "Possible Side Effects",
-              sections.possible_side_effects
-            )}
-            {renderSection("Important Warnings", sections.important_warnings)}
-            {renderSection(
-              "Questions for Your Pharmacist",
-              sections.questions_for_your_pharmacist
-            )}
-          </>
-        )}
+      {/* Fallback for Lab Results without structured data */}
+      {document_type === "lab_results" && sections && !sections.test_data && (
+        <div className="card">
+          {renderSection("Summary", sections.summary)}
+          {renderSection(
+            "Detailed Test Results",
+            sections.detailed_test_results
+          )}
+          {renderSection("Risk Assessment", sections.risk_assessment)}
+          {renderSection(
+            "What This Means for Your Health",
+            sections.what_this_means_for_your_health
+          )}
+          {renderSection("Important Notes", sections.important_notes)}
+          {renderSection(
+            "Lifestyle Recommendations",
+            sections.lifestyle_recommendations
+          )}
+          {renderSection("Next Steps", sections.next_steps)}
+        </div>
+      )}
 
-        {!sections && (
+      {/* Prescription Results */}
+      {document_type === "prescription" && sections && (
+        <div className="card">
+          {renderSection("Medications Summary", sections.medications_summary)}
+          {renderSection(
+            "What Each Medicine Does",
+            sections.what_each_medicine_does
+          )}
+          {renderSection(
+            "How to Take Your Medicine",
+            sections.how_to_take_your_medicine
+          )}
+          {renderSection(
+            "Possible Side Effects",
+            sections.possible_side_effects
+          )}
+          {renderSection("Important Warnings", sections.important_warnings)}
+          {renderSection(
+            "Questions for Your Pharmacist",
+            sections.questions_for_your_pharmacist
+          )}
+        </div>
+      )}
+
+      {/* Fallback for unstructured content */}
+      {!sections && (
+        <div className="card">
           <div className="prose prose-gray max-w-none">
             <ReactMarkdown>{translation}</ReactMarkdown>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-800">
