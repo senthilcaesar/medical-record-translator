@@ -87,10 +87,18 @@ async def process_document(job_id: str, file_path: str):
         job_id: Unique job identifier
         file_path: Path to the uploaded file
     """
+    import asyncio
+    
     try:
-        # Update status
+        # Start processing - 10%
+        job_status[job_id]["progress"] = 10
+        job_status[job_id]["status"] = "processing"
+        await asyncio.sleep(0.3)
+        
+        # Extracting text - 20-30%
         job_status[job_id]["progress"] = 20
         job_status[job_id]["status"] = "extracting_text"
+        await asyncio.sleep(0.3)
         
         # Extract text from PDF
         extracted_text = pdf_processor.extract_text_from_pdf(file_path)
@@ -98,16 +106,27 @@ async def process_document(job_id: str, file_path: str):
         if not extracted_text.strip():
             raise ValueError("No text could be extracted from the PDF")
         
-        # Update status
+        job_status[job_id]["progress"] = 30
+        await asyncio.sleep(0.3)
+        
+        # Identifying document type - 40-50%
         job_status[job_id]["progress"] = 40
         job_status[job_id]["status"] = "identifying_document_type"
+        await asyncio.sleep(0.3)
         
         # Identify document type
         doc_type = pdf_processor.identify_document_type(extracted_text)
         
-        # Update status
+        job_status[job_id]["progress"] = 50
+        await asyncio.sleep(0.3)
+        
+        # Translating - 60-90%
         job_status[job_id]["progress"] = 60
         job_status[job_id]["status"] = "translating"
+        await asyncio.sleep(0.3)
+        
+        job_status[job_id]["progress"] = 70
+        await asyncio.sleep(0.3)
         
         # Translate the document
         translation_result = await ai_translator.translate_document(extracted_text, doc_type)
@@ -115,7 +134,13 @@ async def process_document(job_id: str, file_path: str):
         if not translation_result["success"]:
             raise ValueError(translation_result.get("error", "Translation failed"))
         
-        # Update status
+        job_status[job_id]["progress"] = 80
+        await asyncio.sleep(0.3)
+        
+        job_status[job_id]["progress"] = 90
+        await asyncio.sleep(0.3)
+        
+        # Finalizing - 100%
         job_status[job_id]["progress"] = 100
         job_status[job_id]["status"] = "completed"
         job_status[job_id]["result"] = {
@@ -151,7 +176,8 @@ async def get_job_status(job_id: str) -> Dict:
     if job_id not in job_status:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    return job_status[job_id]
+    status = job_status[job_id]
+    return status
 
 @router.get("/result/{job_id}")
 async def get_translation_result(job_id: str) -> Dict:
@@ -169,7 +195,8 @@ async def get_translation_result(job_id: str) -> Dict:
     
     job = job_status[job_id]
     
-    if job["status"] == "processing":
+    processing_states = ["processing", "extracting_text", "identifying_document_type", "translating"]
+    if job["status"] in processing_states:
         raise HTTPException(status_code=202, detail="Translation still in progress")
     
     if job["status"] == "failed":

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@react-spring/web": "^10.0.1",
+    "framer-motion": "^12.18.1"
+  }
+}

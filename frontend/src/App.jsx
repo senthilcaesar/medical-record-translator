@@ -14,6 +14,7 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState(null);
   const [processingMessage, setProcessingMessage] = useState("");
+  const [currentStep, setCurrentStep] = useState("processing");
 
   const handleFileSelect = (file) => {
     setSelectedFile(file);
@@ -44,7 +45,11 @@ function App() {
         jobId,
         (status) => {
           // Update progress
-          setProgress(status.progress || 0);
+          const progressValue = status.progress || 0;
+          setProgress(progressValue);
+
+          // Update current step
+          setCurrentStep(status.status || "processing");
 
           // Update message based on status
           switch (status.status) {
@@ -89,6 +94,7 @@ function App() {
     setResult(null);
     setProgress(0);
     setProcessingMessage("");
+    setCurrentStep("processing");
   };
 
   return (
@@ -218,7 +224,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-600">
-            © 2025 Medical Record Translator. For educational purposes only.
+            © 2025 Medical Record Translator.
           </p>
         </div>
       </footer>

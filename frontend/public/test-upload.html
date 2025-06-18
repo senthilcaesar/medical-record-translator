@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test File Upload</title>
+  </head>
+  <body>
+    <h1>Test File Upload</h1>
+    <p>
+      This is a simple HTML file that simulates a file upload to test the
+      progress bar.
+    </p>
+
+    <form id="uploadForm">
+      <input type="file" id="fileInput" accept=".pdf" />
+      <button type="submit">Upload and Track Progress</button>
+    </form>
+
+    <div id="status"></div>
+
+    <script>
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const fileInput = document.getElementById("fileInput");
+          const file = fileInput.files[0];
+
+          if (!file) {
+            alert("Please select a file");
+            return;
+          }
+
+          // Create a form data and append the file
+          const formData = new FormData();
+          formData.append("file", file);
+
+          // Upload the file
+          try {
+            const response = await fetch("/api/v1/translate/upload", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+            console.log("Upload response:", data);
+
+            if (data.job_id) {
+              // Start polling for status
+              const jobId = data.job_id;
+              document.getElementById(
+                "status"
+              ).innerHTML = `<p>Job ID: ${jobId}</p><p>Polling for status...</p>`;
+
+              const pollInterval = setInterval(async () => {
+                const statusResponse = await fetch(
+                  `/api/v1/translate/status/${jobId}`
+                );
+                const statusData = await statusResponse.json();
+
+                console.log("Status:", statusData);
+                document.getElementById("status").innerHTML = `
+                            <p>Job ID: ${jobId}</p>
+                            <p>Status: ${statusData.status}</p>
+                            <p>Progress: ${statusData.progress}%</p>
+                        `;
+
+                if (
+                  statusData.status === "completed" ||
+                  statusData.status === "failed"
+                ) {
+                  clearInterval(pollInterval);
+                }
+              }, 1000);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            document.getElementById(
+              "status"
+            ).innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+          }
+        });
+    </script>
+  </body>
+</html>

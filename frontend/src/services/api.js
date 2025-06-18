@@ -53,7 +53,7 @@ export const translationAPI = {
 
 // Helper function to poll job status
 export const pollJobStatus = async (jobId, onProgress, onComplete, onError) => {
-  const maxAttempts = 60; // 60 attempts = 1 minute with 1 second intervals
+  const maxAttempts = 300; // 300 attempts = 1 minute with 200ms intervals
   let attempts = 0;
 
   const poll = async () => {
@@ -76,10 +76,17 @@ export const pollJobStatus = async (jobId, onProgress, onComplete, onError) => {
         onProgress(status);
       }
 
-      // Continue polling if still processing
-      if (status.status === "processing" && attempts < maxAttempts) {
+      // Continue polling if still processing (any non-terminal state)
+      const processingStates = [
+        "processing",
+        "extracting_text",
+        "identifying_document_type",
+        "translating",
+      ];
+      if (processingStates.includes(status.status) && attempts < maxAttempts) {
         attempts++;
-        setTimeout(poll, 1000); // Poll every second
+
+        setTimeout(poll, 200); // Poll every 200ms for smoother progress updates
       } else if (attempts >= maxAttempts) {
         onError(new Error("Translation timeout - please try again"));
       }
