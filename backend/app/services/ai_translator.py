@@ -93,30 +93,25 @@ class AITranslator:
         
         if doc_type == 'lab_results':
             section_headers = [
-                "Summary",
-                "Detailed Test Results",
-                "Risk Assessment",
-                "What This Means for Your Health",
-                "Important Notes",
-                "Lifestyle Recommendations",
-                "Next Steps"
+                "First, the good news about your results",
+                "Here's what we need to keep an eye on",
+                "Should you be worried?",
+                "What this means for your daily life",
+                "Your next steps"
             ]
             
-            # Extract structured data for lab results from markdown format
-            sections['test_data'] = self._extract_test_data_from_markdown(translation)
-            
-            # If parsing failed, create sample structured data for demonstration
-            if not sections['test_data']:
-                sections['test_data'] = self._create_sample_test_data()
+            # For conversational format, we don't need structured test data
+            # The content will be displayed as flowing text sections
+            sections['conversational_format'] = True
             
         elif doc_type == 'prescription':
             section_headers = [
-                "Medications Summary",
-                "What Each Medicine Does",
-                "How to Take Your Medicine",
-                "Possible Side Effects",
-                "Important Warnings",
-                "Questions for Your Pharmacist"
+                "Here's what your doctor has prescribed for you",
+                "What each medicine does for your health",
+                "How to take your medications properly",
+                "What to expect and side effects to know about",
+                "Important things to remember",
+                "Questions to ask your pharmacist"
             ]
         else:
             return {"full_text": translation}
@@ -130,13 +125,39 @@ class AITranslator:
             # Check if line is a section header
             is_header = False
             for header in section_headers:
-                if header.lower() in line.lower() and (line.startswith('**') or line.startswith('#')):
+                # More flexible header matching for conversational format
+                if header.lower() in line.lower() and (line.startswith('**') or line.startswith('#') or line.startswith('##')):
                     # Save previous section
                     if current_section:
                         sections[current_section] = '\n'.join(current_content).strip()
                     
-                    # Start new section
-                    current_section = header.lower().replace(' ', '_')
+                    # Start new section - create key from header
+                    if "good news" in header.lower():
+                        current_section = "good_news"
+                    elif "keep an eye on" in header.lower():
+                        current_section = "keep_eye_on"
+                    elif "should you be worried" in header.lower():
+                        current_section = "should_worry"
+                    elif "daily life" in header.lower():
+                        current_section = "daily_life"
+                    elif "next steps" in header.lower():
+                        current_section = "next_steps"
+                    # Prescription section mappings
+                    elif "doctor has prescribed" in header.lower():
+                        current_section = "prescribed_medications"
+                    elif "what each medicine does" in header.lower():
+                        current_section = "medicine_purposes"
+                    elif "how to take your medications" in header.lower():
+                        current_section = "medication_instructions"
+                    elif "what to expect and side effects" in header.lower():
+                        current_section = "side_effects"
+                    elif "important things to remember" in header.lower():
+                        current_section = "important_warnings"
+                    elif "questions to ask your pharmacist" in header.lower():
+                        current_section = "pharmacist_questions"
+                    else:
+                        current_section = header.lower().replace(' ', '_').replace(',', '').replace('?', '').replace('...', '')
+                    
                     current_content = []
                     is_header = True
                     break

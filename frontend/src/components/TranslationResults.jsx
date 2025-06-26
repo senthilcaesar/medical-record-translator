@@ -1,7 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { FiFileText, FiDownload, FiRefreshCw } from "react-icons/fi";
-import TestResultsTable from "./TestResultsTable";
 
 const TranslationResults = ({ result, onNewTranslation }) => {
   const { document_type, sections, translation } = result.result;
@@ -80,73 +79,185 @@ const TranslationResults = ({ result, onNewTranslation }) => {
         </div>
       </div>
 
-      {/* Lab Results with Interactive Table */}
-      {document_type === "lab_results" && sections && sections.test_data && (
-        <div className="space-y-8">
-          {/* Interactive Test Results Table */}
-          <TestResultsTable testData={sections.test_data} />
+      {/* Lab Results with Conversational Format */}
+      {document_type === "lab_results" && sections && (
+        <div className="space-y-6">
+          {/* Conversational Sections */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <span className="text-2xl">📋</span>
+                Your Lab Results Explained
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                A caring explanation of what your results mean for your health
+              </p>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Good News Section */}
+              {sections.good_news && (
+                <div className="bg-green-50 border-l-4 border-green-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">🎉</span>
+                    First, the good news about your results...
+                  </h4>
+                  <div className="prose prose-green max-w-none text-green-700">
+                    <ReactMarkdown>{sections.good_news}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
 
-          {/* Additional Sections */}
-          <div className="card">
-            {renderSection("Summary", sections.summary)}
-            {renderSection("Risk Assessment", sections.risk_assessment)}
-            {renderSection(
-              "What This Means for Your Health",
-              sections.what_this_means_for_your_health
-            )}
-            {renderSection("Important Notes", sections.important_notes)}
-            {renderSection(
-              "Lifestyle Recommendations",
-              sections.lifestyle_recommendations
-            )}
-            {renderSection("Next Steps", sections.next_steps)}
+              {/* Keep Eye On Section */}
+              {sections.keep_eye_on && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">👀</span>
+                    Here's what we need to keep an eye on...
+                  </h4>
+                  <div className="prose prose-yellow max-w-none text-yellow-700">
+                    <ReactMarkdown>{sections.keep_eye_on}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Should Worry Section */}
+              {sections.should_worry && (
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">🤔</span>
+                    Should you be worried?
+                  </h4>
+                  <div className="prose prose-blue max-w-none text-blue-700">
+                    <ReactMarkdown>{sections.should_worry}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Daily Life Section */}
+              {sections.daily_life && (
+                <div className="bg-purple-50 border-l-4 border-purple-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">🏃‍♀️</span>
+                    What this means for your daily life...
+                  </h4>
+                  <div className="prose prose-purple max-w-none text-purple-700">
+                    <ReactMarkdown>{sections.daily_life}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Next Steps Section */}
+              {sections.next_steps && (
+                <div className="bg-indigo-50 border-l-4 border-indigo-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-indigo-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">📝</span>
+                    Your next steps...
+                  </h4>
+                  <div className="prose prose-indigo max-w-none text-indigo-700">
+                    <ReactMarkdown>{sections.next_steps}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Fallback for Lab Results without structured data */}
-      {document_type === "lab_results" && sections && !sections.test_data && (
-        <div className="card">
-          {renderSection("Summary", sections.summary)}
-          {renderSection(
-            "Detailed Test Results",
-            sections.detailed_test_results
-          )}
-          {renderSection("Risk Assessment", sections.risk_assessment)}
-          {renderSection(
-            "What This Means for Your Health",
-            sections.what_this_means_for_your_health
-          )}
-          {renderSection("Important Notes", sections.important_notes)}
-          {renderSection(
-            "Lifestyle Recommendations",
-            sections.lifestyle_recommendations
-          )}
-          {renderSection("Next Steps", sections.next_steps)}
-        </div>
-      )}
-
-      {/* Prescription Results */}
+      {/* Prescription Results with Conversational Format */}
       {document_type === "prescription" && sections && (
-        <div className="card">
-          {renderSection("Medications Summary", sections.medications_summary)}
-          {renderSection(
-            "What Each Medicine Does",
-            sections.what_each_medicine_does
-          )}
-          {renderSection(
-            "How to Take Your Medicine",
-            sections.how_to_take_your_medicine
-          )}
-          {renderSection(
-            "Possible Side Effects",
-            sections.possible_side_effects
-          )}
-          {renderSection("Important Warnings", sections.important_warnings)}
-          {renderSection(
-            "Questions for Your Pharmacist",
-            sections.questions_for_your_pharmacist
-          )}
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <span className="text-2xl">💊</span>
+                Your Prescription Explained
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                A caring explanation of your medications and how to take them
+              </p>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Prescribed Medications Section */}
+              {sections.prescribed_medications && (
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">📋</span>
+                    Here's what your doctor has prescribed for you...
+                  </h4>
+                  <div className="prose prose-blue max-w-none text-blue-700">
+                    <ReactMarkdown>{sections.prescribed_medications}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Medicine Purposes Section */}
+              {sections.medicine_purposes && (
+                <div className="bg-green-50 border-l-4 border-green-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">🎯</span>
+                    What each medicine does for your health...
+                  </h4>
+                  <div className="prose prose-green max-w-none text-green-700">
+                    <ReactMarkdown>{sections.medicine_purposes}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Medication Instructions Section */}
+              {sections.medication_instructions && (
+                <div className="bg-purple-50 border-l-4 border-purple-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">⏰</span>
+                    How to take your medications properly...
+                  </h4>
+                  <div className="prose prose-purple max-w-none text-purple-700">
+                    <ReactMarkdown>{sections.medication_instructions}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Side Effects Section */}
+              {sections.side_effects && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">⚠️</span>
+                    What to expect and side effects to know about...
+                  </h4>
+                  <div className="prose prose-yellow max-w-none text-yellow-700">
+                    <ReactMarkdown>{sections.side_effects}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Important Warnings Section */}
+              {sections.important_warnings && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-red-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">🚨</span>
+                    Important things to remember...
+                  </h4>
+                  <div className="prose prose-red max-w-none text-red-700">
+                    <ReactMarkdown>{sections.important_warnings}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Pharmacist Questions Section */}
+              {sections.pharmacist_questions && (
+                <div className="bg-indigo-50 border-l-4 border-indigo-400 p-6 rounded-r-lg">
+                  <h4 className="text-lg font-semibold text-indigo-800 mb-3 flex items-center gap-2">
+                    <span className="text-xl">❓</span>
+                    Questions to ask your pharmacist...
+                  </h4>
+                  <div className="prose prose-indigo max-w-none text-indigo-700">
+                    <ReactMarkdown>{sections.pharmacist_questions}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
