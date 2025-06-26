@@ -1,354 +1,546 @@
-# Medical Record Translator
+# 🏥 Medical Record Translator
 
-A web application that helps patients understand their medical records by translating complex medical terminology into plain English using AI.
+A modern web application that transforms complex medical documents into plain English using AI, helping patients better understand their health records.
 
-![Alt text](images/lab_result_dash.png)
+![Medical Record Translator Dashboard](images/lab_result_dash.png)
 
-## Features
+## 📋 Table of Contents
 
-- **PDF Upload**: Upload lab results and prescriptions in PDF format
-- **AI-Powered Translation**: Uses OpenAI GPT-4 to translate medical jargon
-- **Structured Output**: Organized sections for easy understanding
-- **Privacy-Focused**: No data persistence, files are deleted after processing
-- **Responsive Design**: Works on desktop and mobile devices
+- [About This App](#about-this-app)
+- [Key Features](#key-features)
+- [Architecture Overview](#architecture-overview)
+- [Frontend Components](#frontend-components)
+- [Backend Components](#backend-components)
+- [How Frontend and Backend Interact](#how-frontend-and-backend-interact)
+- [Getting Started](#getting-started)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+- [Security & Privacy](#security--privacy)
+- [Contributing](#contributing)
 
-## Architecture Overview
+## 🎯 About This App
 
-### Frontend (React + Vite)
+The Medical Record Translator is designed to bridge the gap between medical professionals and patients by translating complex medical terminology into easy-to-understand language. Whether you receive lab results or prescriptions, this app helps you understand what they mean for your health.
 
-The frontend is a single-page application built with React and Vite that provides:
+### Problem It Solves
 
-- **User Interface**: Clean, modern UI built with React components and styled with Tailwind CSS
-- **File Upload**: Drag-and-drop file upload using react-dropzone
-- **API Communication**: Axios-based API client for backend communication
-- **Real-time Updates**: Polling mechanism to track translation progress
-- **State Management**: React hooks for local state management
+- **Medical Jargon**: Patients often receive documents filled with technical terms they don't understand
+- **Health Literacy**: Many people struggle to interpret their test results or medication instructions
+- **Doctor-Patient Communication**: Limited appointment time makes it hard to explain everything in detail
+- **Accessibility**: Not everyone has immediate access to healthcare professionals for clarification
 
-Key Components:
+### Our Solution
 
-- `FileUpload.jsx`: Handles PDF file selection and validation
-- `LoadingSpinner.jsx`: Shows processing progress with percentage
-- `TranslationResults.jsx`: Displays translated content in organized sections
-- `App.jsx`: Main application component managing overall state
+Using advanced AI (OpenAI GPT-4), we:
+- Extract text from PDF medical documents
+- Identify the type of document (lab results or prescription)
+- Translate medical terms into plain English
+- Provide context about what results mean
+- Organize information in an easy-to-read format
+- Display results in an interactive dashboard
 
-### Backend (Python FastAPI)
+## ✨ Key Features
 
-The backend is a RESTful API service that handles:
+- **📄 PDF Upload**: Drag-and-drop interface for easy file upload
+- **🤖 AI-Powered Translation**: Uses GPT-4 for accurate medical translations
+- **📊 Interactive Dashboard**: Visual representation of lab results with color-coded indicators
+- **🔒 Privacy-First**: No data storage - files are deleted after processing
+- **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **⚡ Real-time Progress**: Live updates during document processing
+- **🎨 Intuitive UI**: Clean, modern interface that's easy to navigate
 
-- **File Processing**: Validates and extracts text from PDF files using PyMuPDF
-- **Document Classification**: Identifies document type (lab results vs prescription)
-- **AI Translation**: Sends extracted text to OpenAI GPT-4 with specialized prompts
-- **Async Processing**: Background job processing for non-blocking operations
-- **Status Tracking**: In-memory job status tracking (Redis-ready for production)
+## 🏗️ Architecture Overview
 
-Key Services:
+```
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│                 │         │                 │         │                 │
+│   React SPA     │ <-----> │  FastAPI Backend│ <-----> │  OpenAI API     │
+│   (Frontend)    │  HTTP   │   (Python)      │  HTTPS  │   (GPT-4)       │
+│                 │         │                 │         │                 │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
+        │                           │
+        │                           │
+        ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│                 │         │                 │
+│   Browser       │         │   Redis Cache   │
+│   Storage       │         │   (Optional)    │
+│                 │         │                 │
+└─────────────────┘         └─────────────────┘
+```
 
-- `pdf_processor.py`: Extracts and cleans text from PDFs
-- `ai_translator.py`: Manages OpenAI API calls with custom medical prompts
-- `validators.py`: Ensures file security and validity
-- `translate.py`: API endpoints for upload, status checking, and results
+## 🎨 Frontend Components
 
-### How Frontend and Backend Coordinate
+The frontend is built with React 18 and Vite, providing a fast and modern user experience.
 
-1. **File Upload Flow**:
+### Component Structure
 
-   - User selects a PDF file in the frontend
-   - Frontend sends file to `/api/v1/translate/upload` endpoint
-   - Backend returns a unique `job_id` immediately
-   - Frontend starts polling for status updates
+```
+frontend/src/
+├── components/
+│   ├── FileUpload.jsx       # Drag-and-drop file upload interface
+│   ├── LoadingSpinner.jsx   # Progress indicator during processing
+│   ├── TestProgress.jsx     # Real-time progress updates
+│   ├── TestResultsTable.jsx # Interactive dashboard for lab results
+│   └── TranslationResults.jsx # Main results display component
+├── services/
+│   └── api.js              # API client for backend communication
+├── App.jsx                 # Main application component
+├── main.jsx               # Application entry point
+└── index.css              # Global styles with Tailwind CSS
+```
 
-2. **Processing Flow**:
+### Key Components Explained
 
-   - Backend processes file asynchronously in background
-   - Updates job status: `extracting_text` → `identifying_document_type` → `translating` → `completed`
-   - Frontend polls `/api/v1/translate/status/{job_id}` every second
-   - Progress percentage is displayed to user
+#### 1. **FileUpload.jsx**
+- Handles PDF file selection and validation
+- Supports drag-and-drop and click-to-upload
+- Validates file type (PDF only) and size (max 10MB)
+- Shows file preview with option to remove
 
-3. **Results Flow**:
+#### 2. **LoadingSpinner.jsx**
+- Displays during file processing
+- Shows percentage progress
+- Animated spinner for visual feedback
+- Updates status messages in real-time
 
-   - Once status is `completed`, frontend fetches results from `/api/v1/translate/result/{job_id}`
-   - Results include structured translation with sections
-   - Frontend displays results in organized, readable format
+#### 3. **TestResultsTable.jsx**
+- Creates the interactive medical dashboard
+- Groups tests by category (Blood Count, Metabolic, etc.)
+- Color-codes results (green=normal, red=abnormal, yellow=borderline)
+- Displays detailed explanations for each test
+- Animated card appearance for better UX
 
-4. **API Proxy Configuration**:
-   - Vite dev server proxies `/api` requests to `http://localhost:8000`
-   - This avoids CORS issues during development
-   - In production, both can be served from same domain
+#### 4. **TranslationResults.jsx**
+- Main container for displaying results
+- Handles both lab results and prescriptions
+- Provides download functionality
+- Includes medical disclaimer
 
-## Tech Stack
+#### 5. **App.jsx**
+- Manages application state
+- Handles file upload flow
+- Coordinates API calls
+- Routes between upload and results views
 
-### Backend
+### Frontend Technologies
 
-- **Python FastAPI**: High-performance async web framework
-- **PyMuPDF**: PDF text extraction library
-- **OpenAI API**: GPT-4 for medical translation
-- **Pydantic**: Data validation and serialization
-- **Uvicorn**: ASGI server for FastAPI
-- **Docker**: Containerization for deployment
-
-### Frontend
-
-- **React 18**: UI library with hooks
-- **Vite**: Fast build tool and dev server
-- **Tailwind CSS**: Utility-first CSS framework
+- **React 18**: Modern UI library with hooks
+- **Vite**: Lightning-fast build tool
+- **Tailwind CSS**: Utility-first styling
 - **Axios**: HTTP client for API calls
-- **React Dropzone**: Drag-and-drop file uploads
+- **React Dropzone**: File upload handling
 - **React Toastify**: User notifications
-- **React Markdown**: Render formatted results
+- **React Markdown**: Formatted text rendering
+- **React Icons**: Consistent iconography
 
-## Prerequisites
+## ⚙️ Backend Components
 
-- Node.js 18+ and npm
-- Python 3.11+
-- OpenAI API key
-- Docker (optional, for containerized deployment)
+The backend is built with Python FastAPI, providing a robust and scalable API.
 
-## Setup Instructions
+### Component Structure
 
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd medical-record-translator
+```
+backend/app/
+├── routers/
+│   └── translate.py        # API endpoints for translation
+├── services/
+│   ├── ai_translator.py    # OpenAI integration & translation logic
+│   ├── pdf_processor.py    # PDF text extraction
+│   └── validators.py       # File validation & security
+├── prompts/
+│   ├── lab_results.py      # Prompts for lab result translation
+│   └── prescriptions.py    # Prompts for prescription translation
+├── config.py              # Application configuration
+└── main.py               # FastAPI application setup
 ```
 
-### 2. Backend Setup
+### Key Components Explained
 
-```bash
-cd backend
+#### 1. **main.py**
+- FastAPI application initialization
+- CORS middleware configuration
+- Global exception handling
+- Health check endpoint
 
-# Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+#### 2. **translate.py (Router)**
+Provides three main endpoints:
+- `POST /upload`: Accepts PDF files and starts processing
+- `GET /status/{job_id}`: Returns processing status and progress
+- `GET /result/{job_id}`: Returns translation results
 
-# Install dependencies
-pip install -r requirements.txt
+#### 3. **ai_translator.py**
+Core translation service that:
+- Manages OpenAI API communication
+- Formats prompts based on document type
+- Parses AI responses into structured data
+- Extracts test data from markdown format
+- Handles error cases and retries
 
-# Create .env file
-cp .env.example .env
+#### 4. **pdf_processor.py**
+- Extracts text from PDF files using PyMuPDF
+- Cleans and normalizes extracted text
+- Identifies document type (lab results vs prescription)
+- Handles various PDF formats
 
-# Edit .env and add your OpenAI API key
-# OPENAI_API_KEY=your_actual_api_key_here
+#### 5. **validators.py**
+- Validates file type and size
+- Checks for malicious content
+- Ensures PDF readability
+- Implements security measures
+
+### Backend Technologies
+
+- **FastAPI**: High-performance async web framework
+- **PyMuPDF (fitz)**: PDF text extraction
+- **OpenAI Python SDK**: GPT-4 integration
+- **Pydantic**: Data validation and serialization
+- **Python-Multipart**: File upload handling
+- **Uvicorn**: ASGI server
+- **Redis** (optional): Job status caching
+
+## 🔄 How Frontend and Backend Interact
+
+The frontend and backend communicate through a RESTful API with the following flow:
+
+### 1. File Upload Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant OpenAI
+
+    User->>Frontend: Selects PDF file
+    Frontend->>Frontend: Validates file locally
+    Frontend->>Backend: POST /api/v1/translate/upload
+    Backend->>Backend: Validates & extracts text
+    Backend-->>Frontend: Returns job_id
+    Frontend->>Frontend: Starts polling for status
 ```
 
-### 3. Frontend Setup
+### 2. Processing Flow
 
-```bash
-cd frontend
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant OpenAI
 
-# Install dependencies
-npm install
+    loop Every 1 second
+        Frontend->>Backend: GET /api/v1/translate/status/{job_id}
+        Backend-->>Frontend: Returns status & progress
+    end
+    
+    Backend->>OpenAI: Sends extracted text with prompts
+    OpenAI-->>Backend: Returns translation
+    Backend->>Backend: Parses & structures response
+    Backend->>Backend: Updates job status to "completed"
 ```
 
-## Running the Application
+### 3. Results Flow
 
-### Quick Start Guide
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant User
 
-#### Step 1: Set up the Backend
-
-1. Open a terminal and navigate to the backend directory:
-
-```bash
-cd backend
+    Frontend->>Backend: GET /api/v1/translate/result/{job_id}
+    Backend-->>Frontend: Returns structured translation
+    Frontend->>Frontend: Renders results in dashboard
+    Frontend->>User: Displays interactive results
 ```
 
-2. Create and activate a Python virtual environment:
+### Key Integration Points
 
+1. **API Proxy Configuration**
+   - Development: Vite proxies `/api` requests to `localhost:8000`
+   - Production: Both services on same domain or CORS configured
+
+2. **Status Updates**
+   - Backend tracks progress through stages:
+     - `extracting_text` (20%)
+     - `identifying_document_type` (40%)
+     - `translating` (60-90%)
+     - `completed` (100%)
+
+3. **Error Handling**
+   - Frontend displays user-friendly error messages
+   - Backend returns structured error responses
+   - Automatic retry logic for transient failures
+
+4. **Data Format**
+   - Frontend sends: `multipart/form-data` with PDF file
+   - Backend returns: JSON with structured translation data
+   - Special handling for lab results with test data array
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js 18+** and npm (for frontend)
+- **Python 3.11+** (for backend)
+- **OpenAI API key** with GPT-4 access
+- **Git** for version control
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/medical-record-translator.git
+   cd medical-record-translator
+   ```
+
+2. **Set up the backend**
+   ```bash
+   cd backend
+   
+   # Create virtual environment
+   python -m venv venv
+   
+   # Activate virtual environment
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   
+   # Create .env file
+   cp .env.example .env
+   
+   # Edit .env and add your OpenAI API key
+   # OPENAI_API_KEY=sk-...your-key-here
+   ```
+
+3. **Set up the frontend**
+   ```bash
+   cd ../frontend
+   
+   # Install dependencies
+   npm install
+   ```
+
+## 💻 Running the Application
+
+You need to run both the backend and frontend servers simultaneously.
+
+### Start the Backend Server
+
+1. **Open a terminal** and navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. **Activate the virtual environment**:
+   ```bash
+   # On Windows:
+   venv\Scripts\activate
+   
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Start the FastAPI server**:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
+   
+   The backend will be available at `http://localhost:8000`
+   
+   You can view the API documentation at `http://localhost:8000/docs`
+
+### Start the Frontend Server
+
+1. **Open a new terminal** (keep the backend running) and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   
+   The frontend will be available at `http://localhost:5173`
+
+### Verify Everything is Working
+
+1. Open your browser and go to `http://localhost:5173`
+2. You should see the Medical Record Translator interface
+3. Try uploading a sample PDF file
+4. Check both terminal windows for any error messages
+
+### Common Commands
+
+#### Backend Commands
 ```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate it
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
-```
-
-3. Install Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Set up your OpenAI API key:
-
-```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env file and add your OpenAI API key
-# Open .env in your editor and replace 'your_openai_api_key_here' with your actual key
-```
-
-5. Start the backend server:
-
-```bash
+# Run backend in development mode
 uvicorn app.main:app --reload --port 8000
+
+# Run backend in production mode
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# Run tests
+pytest
+
+# Format code
+black app/
+
+# Lint code
+flake8 app/
 ```
 
-The backend will start at `http://localhost:8000`. You can view the API documentation at `http://localhost:8000/docs`.
-
-#### Step 2: Set up the Frontend
-
-1. Open a **new terminal** and navigate to the frontend directory:
-
+#### Frontend Commands
 ```bash
-cd frontend
-```
-
-2. Install Node.js dependencies:
-
-```bash
-npm install
-```
-
-3. Start the frontend development server:
-
-```bash
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
 ```
 
-The frontend will start at `http://localhost:3000`.
+## 📚 API Documentation
 
-#### Step 3: Use the Application
+### Endpoints
 
-1. Open your browser and go to `http://localhost:3000`
-2. You'll see the Medical Record Translator interface
-3. Upload a PDF file (lab results or prescription)
-4. Wait for the translation to complete
-5. Review the results in plain English
+#### 1. Upload Document
+```http
+POST /api/v1/translate/upload
+Content-Type: multipart/form-data
 
-### Using Docker Compose (Alternative)
+Body:
+- file: PDF file (max 10MB)
 
-If you prefer using Docker:
-
-1. Make sure Docker and Docker Compose are installed
-2. Create a `.env` file in the root directory with your OpenAI API key:
-
-```bash
-echo "OPENAI_API_KEY=your_actual_api_key_here" > .env
+Response:
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "processing",
+  "message": "File uploaded successfully"
+}
 ```
 
-3. Run the application:
+#### 2. Check Status
+```http
+GET /api/v1/translate/status/{job_id}
 
-```bash
-docker-compose up --build
+Response:
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "translating",
+  "progress": 75,
+  "message": "Translating document..."
+}
 ```
 
-This will start both frontend and backend services automatically.
+#### 3. Get Results
+```http
+GET /api/v1/translate/result/{job_id}
 
-### Troubleshooting
-
-**Backend Issues:**
-
-- If you get "ModuleNotFoundError", make sure your virtual environment is activated
-- If you get "OpenAI API key not configured", check your .env file
-- If port 8000 is already in use, change it in the uvicorn command and update frontend proxy
-
-**Frontend Issues:**
-
-- If you get "node: command not found", install Node.js from https://nodejs.org
-- If you get "vite: command not found", run `npm install` again
-- If the frontend can't connect to backend, ensure backend is running on port 8000
-
-**General Issues:**
-
-- Make sure both terminals (backend and frontend) are running simultaneously
-- Check that your OpenAI API key is valid and has credits
-- Ensure your PDF files are under 10MB
-
-## Usage
-
-1. **Upload a Medical Document**: Click or drag a PDF file containing lab results or a prescription
-2. **Wait for Processing**: The app will extract text, identify the document type, and translate it
-3. **Review Results**: Read the plain English translation organized in clear sections
-4. **Download or Start New**: Download the translation or upload another document
-
-## API Endpoints
-
-- `POST /api/v1/translate/upload` - Upload a PDF for translation
-- `GET /api/v1/translate/status/{job_id}` - Check translation status
-- `GET /api/v1/translate/result/{job_id}` - Get translation results
-- `GET /api/v1/translate/health` - Health check endpoint
-
-## Project Structure
-
-```
-medical-record-translator/
-├── backend/
-│   ├── app/
-│   │   ├── main.py           # FastAPI application
-│   │   ├── config.py         # Configuration settings
-│   │   ├── routers/          # API routes
-│   │   ├── services/         # Business logic
-│   │   └── prompts/          # AI prompts
-│   ├── requirements.txt
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── services/         # API client
-│   │   └── App.jsx          # Main application
-│   ├── package.json
-│   └── vite.config.js
-└── docker-compose.yml
+Response:
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "result": {
+    "document_type": "lab_results",
+    "translation": "...",
+    "sections": {...},
+    "test_data": [...]
+  }
+}
 ```
 
-## Environment Variables
+#### 4. Health Check
+```http
+GET /api/v1/translate/health
 
-### Backend (.env)
-
-```
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4-turbo-preview
-UPLOAD_DIR=/tmp/uploads
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-```
-
-## Security Considerations
-
-- Files are automatically deleted after processing
-- No user data is stored permanently
-- API rate limiting is implemented
-- File size limits (10MB) prevent abuse
-- Only PDF files are accepted
-
-## Deployment
-
-### Google Cloud Run
-
-1. Build and push the Docker image:
-
-```bash
-cd backend
-gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/medical-translator-backend
+Response:
+{
+  "status": "healthy",
+  "version": "1.0.0"
+}
 ```
 
-2. Deploy to Cloud Run:
+## 🚀 Deployment
 
-```bash
-gcloud run deploy medical-translator-backend \
-  --image gcr.io/YOUR_PROJECT_ID/medical-translator-backend \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
+For detailed deployment instructions, see:
+- [QUICK_DEPLOYMENT_GUIDE.md](QUICK_DEPLOYMENT_GUIDE.md) - Railway & Render deployment
+- [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
 
-3. Deploy frontend to Firebase Hosting or Cloud Storage
+Quick deployment options:
+- **Railway.app**: One-click deploy with automatic scaling
+- **Render.com**: Blueprint-based deployment with generous free tier
+- **Vercel + Supabase**: Frontend on Vercel, backend on Supabase
+- **Docker**: Containerized deployment for any platform
 
-## Contributing
+## 🔒 Security & Privacy
+
+- **No Data Storage**: Files are processed in memory and immediately deleted
+- **Encrypted Communication**: All API calls use HTTPS in production
+- **Input Validation**: Strict file type and size limits
+- **Rate Limiting**: Prevents abuse and controls costs
+- **Environment Variables**: Sensitive data never committed to code
+- **CORS Protection**: Only authorized origins can access the API
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines:
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+### Development Setup
 
-This project is for educational purposes only. Always consult with healthcare providers for medical advice.
+1. Follow the installation steps above
+2. Install development dependencies:
+   ```bash
+   # Backend
+   pip install -r requirements-dev.txt
+   
+   # Frontend
+   npm install --save-dev
+   ```
 
-## Disclaimer
+3. Run tests before submitting PR:
+   ```bash
+   # Backend tests
+   pytest
+   
+   # Frontend tests
+   npm test
+   ```
 
-This application is designed to help patients better understand their medical documents but should not replace professional medical advice. Always consult with your healthcare provider for medical interpretations and decisions.
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## ⚠️ Disclaimer
+
+This application is designed to help patients better understand their medical documents but should **not replace professional medical advice**. Always consult with your healthcare provider for medical interpretations and decisions.
+
+## 🙏 Acknowledgments
+
+- OpenAI for providing the GPT-4 API
+- The FastAPI team for an excellent web framework
+- The React team for a powerful UI library
+- All contributors and users of this application
+
+---
+
+Built with ❤️ to make healthcare more accessible and understandable for everyone.
