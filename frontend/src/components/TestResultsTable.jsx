@@ -188,41 +188,49 @@ const TestResultsTable = ({ testData }) => {
 
                   {/* Test Details Table */}
                   <div className="space-y-3">
-                    <div className="border-l-4 border-blue-500 pl-3">
-                      <div className="text-sm font-semibold text-gray-700">
-                        Purpose
+                    {test.purpose && (
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <div className="text-sm font-semibold text-gray-700">
+                          Purpose
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {test.purpose}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {test.purpose}
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="border-l-4 border-green-500 pl-3">
-                      <div className="text-sm font-semibold text-gray-700">
-                        What This Means
+                    {test.what_this_means && (
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <div className="text-sm font-semibold text-gray-700">
+                          What This Means
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {test.what_this_means}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {test.what_this_means}
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="border-l-4 border-purple-500 pl-3">
-                      <div className="text-sm font-semibold text-gray-700">
-                        Health Impact
+                    {test.health_impact && (
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <div className="text-sm font-semibold text-gray-700">
+                          Health Impact
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {test.health_impact}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {test.health_impact}
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="border-l-4 border-orange-500 pl-3">
-                      <div className="text-sm font-semibold text-gray-700">
-                        Medical Significance
+                    {test.medical_significance && (
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <div className="text-sm font-semibold text-gray-700">
+                          Medical Significance
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {test.medical_significance}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {test.medical_significance}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>

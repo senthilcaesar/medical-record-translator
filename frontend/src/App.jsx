@@ -38,8 +38,6 @@ function App() {
       const uploadResponse = await translationAPI.uploadDocument(selectedFile);
       const jobId = uploadResponse.job_id;
 
-      toast.success("File uploaded successfully!");
-
       // Poll for status
       pollJobStatus(
         jobId,
@@ -60,7 +58,7 @@ function App() {
               setProcessingMessage("Identifying document type...");
               break;
             case "translating":
-              setProcessingMessage("Translating medical terminology...");
+              setProcessingMessage("Translating...");
               break;
             default:
               setProcessingMessage("Processing your document...");
@@ -71,7 +69,6 @@ function App() {
           setResult(result);
           setIsProcessing(false);
           setIsUploading(false);
-          toast.success("Translation completed successfully!");
         },
         (error) => {
           // Error

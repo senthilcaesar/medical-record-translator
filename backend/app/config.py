@@ -10,7 +10,7 @@ class Settings:
     
     # OpenAI Configuration
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview")
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "")
     
     # File Upload Configuration
     MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB

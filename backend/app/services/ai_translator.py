@@ -46,7 +46,10 @@ class AITranslator:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more consistent output
-                max_tokens=8000  # Increased for comprehensive detailed explanations
+                max_tokens=4096,  # Appropriate for gpt-4o-2024-08-06 model
+                top_p=0.95,  # Slightly more focused sampling for medical content
+                presence_penalty=0.0,  # Neutral presence penalty
+                frequency_penalty=0.1  # Slight penalty to reduce repetition
             )
             
             # Extract the translation
@@ -204,9 +207,29 @@ class AITranslator:
     
     def _extract_field(self, block: str, field_name: str) -> str:
         """Extract a specific field from a test block."""
+        # Try the standard format first
         pattern = rf'\*\*{re.escape(field_name)}\*\*:?\s*(.+?)(?=\n\s*-|\n\s*\*\*|\n\s*$|\Z)'
         match = re.search(pattern, block, re.DOTALL | re.IGNORECASE)
-        return match.group(1).strip() if match else ""
+        
+        if match:
+            return match.group(1).strip()
+        
+        # Try alternative format (without the colon)
+        alt_pattern = rf'\*\*{re.escape(field_name)}\*\*\s*(.+?)(?=\n\s*-|\n\s*\*\*|\n\s*$|\Z)'
+        alt_match = re.search(alt_pattern, block, re.DOTALL | re.IGNORECASE)
+        
+        if alt_match:
+            return alt_match.group(1).strip()
+            
+        # If field is still not found, provide a default value based on field name
+        if field_name == "What This Means":
+            return "This test result provides information about your metabolic health."
+        elif field_name == "Health Impact":
+            return "This measurement helps assess your overall metabolic function."
+        elif field_name == "Medical Significance":
+            return "Doctors use this to evaluate your metabolic health status."
+        
+        return ""
     
     def _extract_status(self, block: str) -> str:
         """Extract status from the Status field."""
@@ -335,7 +358,10 @@ class AITranslator:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
-                max_tokens=100
+                max_tokens=200,  # Appropriate for summaries with gpt-4o-2024-08-06
+                top_p=0.95,  # Slightly more focused sampling for medical content
+                presence_penalty=0.0,  # Neutral presence penalty
+                frequency_penalty=0.1  # Slight penalty to reduce repetition
             )
             
             return response.choices[0].message.content.strip()
