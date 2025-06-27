@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4-turbo-preview}
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGINS=http://localhost:3000,http://localhost
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - app-network
+    command: redis-server --appendonly yes
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  uploads:
+    driver: local
+  redis_data:
+    driver: local
