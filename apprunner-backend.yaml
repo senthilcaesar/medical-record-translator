@@ -1,0 +1,21 @@
+version: 1.0
+runtime: docker
+build:
+  commands:
+    build:
+      - echo "No build commands"
+run:
+  runtime-version: latest
+  command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+    env: PORT
+  env:
+    - name: OPENAI_API_KEY
+      value-from: "/medical-translator/openai-api-key"
+    - name: REDIS_URL
+      value-from: "/medical-translator/redis-url"
+    - name: CORS_ORIGINS
+      value: "https://your-frontend-domain.awsapprunner.com"
+    - name: OPENAI_MODEL
+      value: "gpt-4-turbo-preview"
